@@ -54,7 +54,7 @@ class AdminTest extends TestCase
         $this->assertSame(2, $s['parties_with_extras']);
         $this->assertSame(24, $s['allocated']);        // 4 x 6
         $this->assertSame(19, $s['remaining_allocated']);
-        $this->assertSame(75, $s['response_rate']);
+        $this->assertEquals(75, $s['response_rate']);
     }
 
     public function test_creating_invitations_applies_category_allowance_and_unique_codes(): void
