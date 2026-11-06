@@ -4,6 +4,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Graduation Celebration')</title>
+    @php $ev = app(\App\Services\EventSettings::class); @endphp
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="You are invited: {{ $ev->get('event_title') }}">
+    <meta property="og:description" content="{{ $ev->get('graduate_name') }} · {{ $ev->startsAt()->format('l, j F Y') }} · {{ $ev->get('venue') }}">
+    <meta property="og:url" content="{{ url('https://rsvp.ethiodeploy.app/rsvp') }}">
+    <meta property="og:image" content="{{ asset('images/poster.jpg') }}?v=1">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
     <meta name="robots" content="noindex">
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
