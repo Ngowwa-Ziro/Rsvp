@@ -39,6 +39,7 @@
     <div class="bg-white rounded-xl p-5 shadow-sm">
         <h2 class="font-semibold mb-1">Follow-ups</h2>
         <p><a class="underline" href="{{ route('admin.invitations.index', ['status' => 'pending']) }}">{{ $s['pending'] }} guests haven't responded</a>. Open the list to send each a WhatsApp reminder.</p>
+        <p class="mt-2"><a class="underline" href="{{ route('admin.invitations.index', ['status' => 'unsent']) }}">{{ $s['unsent'] }} invitations whose link hasn't been sent yet</a></p>
         <p class="mt-2 text-sm text-charcoal/70">Checked in on the day: {{ $s['checked_in'] }}</p>
     </div>
 </div>

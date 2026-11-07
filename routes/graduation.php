@@ -25,6 +25,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::resource('invitations', Admin\InvitationController::class);
         Route::patch('invitations/{invitation}/restore', [Admin\InvitationController::class, 'restore'])->name('invitations.restore');
+        Route::post('invitations/{invitation}/send', [Admin\InvitationController::class, 'send'])->name('invitations.send');
+        Route::patch('invitations/{invitation}/reset-sends', [Admin\InvitationController::class, 'resetSends'])->name('invitations.reset-sends');
         Route::put('invitations/{invitation}/rsvp', [Admin\InvitationController::class, 'respond'])->name('invitations.respond');
 
         Route::get('export', [Admin\ExportImportController::class, 'export'])->name('export');

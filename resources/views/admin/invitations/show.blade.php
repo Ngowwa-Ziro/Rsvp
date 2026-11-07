@@ -6,6 +6,12 @@
         <h1 class="font-serif text-4xl">{{ $invitation->name }}</h1>
         <p class="text-charcoal/70">{{ $invitation->category->label() }} &middot; {{ $invitation->phone }} @if ($invitation->email) &middot; {{ $invitation->email }} @endif</p>
         <p class="mt-1">Code <span class="font-mono font-bold text-xl">{{ $invitation->code }}</span> &middot; up to {{ $invitation->max_attendees }} people</p>
+        <p class="mt-1 text-sm text-charcoal/70">
+            @if ($invitation->send_count === 0) Link not sent yet.
+            @else Link opened in WhatsApp {{ $invitation->send_count }}x (last {{ $invitation->last_sent_at?->timezone('Africa/Nairobi')->format('j M, g:i A') }}).
+                <form method="POST" action="{{ route('admin.invitations.reset-sends', $invitation) }}" class="inline">@csrf @method('PATCH')<button class="underline">Reset</button></form>
+            @endif
+        </p>
         @if ($invitation->isRevoked())<p class="mt-1 text-red-800 font-semibold">Revoked {{ $invitation->revoked_at->diffForHumans() }}</p>@endif
     </div>
     <div class="flex gap-2">

@@ -54,7 +54,7 @@ class AdminTest extends TestCase
         $this->assertSame(2, $s['parties_with_extras']);
         $this->assertSame(24, $s['allocated']);        // 4 x 6
         $this->assertSame(19, $s['remaining_allocated']);
-        $this->assertEquals(75, $s['response_rate']);
+        $this->assertSame(75, $s['response_rate']);
     }
 
     public function test_creating_invitations_applies_category_allowance_and_unique_codes(): void
@@ -160,6 +160,40 @@ class AdminTest extends TestCase
         $this->assertNotNull($guest->fresh()->checked_in_at);
         $this->patch("/admin/check-in/{$guest->id}");
         $this->assertNull($guest->fresh()->checked_in_at);
+    }
+
+    public function test_first_send_is_the_invitation_and_later_sends_are_reminders(): void
+    {
+        $this->actingAs($this->admin());
+        $i = Invitation::factory()->create(['name' => 'Amina', 'code' => 'ABC234', 'phone' => '+254712000111']);
+
+        $r1 = $this->post("/admin/invitations/{$i->id}/send");
+        $r1->assertRedirect();
+        $loc1 = rawurldecode($r1->headers->get('Location'));
+        $this->assertStringStartsWith('https://wa.me/254712000111', $loc1);
+        $this->assertStringNotContainsString('Reminder', $loc1);
+        $this->assertStringContainsString('ABC234', $loc1);
+        $this->assertSame(1, $i->fresh()->send_count);
+        $this->assertNotNull($i->fresh()->last_sent_at);
+
+        $r2 = $this->post("/admin/invitations/{$i->id}/send");
+        $this->assertStringContainsString('Reminder', rawurldecode($r2->headers->get('Location')));
+        $this->assertSame(2, $i->fresh()->send_count);
+
+        $this->patch("/admin/invitations/{$i->id}/reset-sends");
+        $this->assertSame(0, $i->fresh()->send_count);
+    }
+
+    public function test_links_are_not_sent_to_revoked_or_already_responded_invitations(): void
+    {
+        $this->actingAs($this->admin());
+        $revoked = Invitation::factory()->create(['revoked_at' => now()]);
+        $done = Invitation::factory()->create(['status' => 'attending']);
+
+        $this->post("/admin/invitations/{$revoked->id}/send")->assertSessionHasErrors('send');
+        $this->post("/admin/invitations/{$done->id}/send")->assertSessionHasErrors('send');
+        $this->assertSame(0, $revoked->fresh()->send_count);
+        $this->assertSame(0, $done->fresh()->send_count);
     }
 
     private function seedRsvp(int $people, bool $attending = true): Invitation

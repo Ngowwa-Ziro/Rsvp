@@ -9,6 +9,7 @@ use App\Http\Requests\RsvpSubmitRequest;
 use App\Models\Invitation;
 use App\Services\EventSettings;
 use App\Services\InvitationCodeGenerator;
+use App\Services\InviteMessageBuilder;
 use App\Services\RsvpService;
 use Illuminate\Http\Request;
 
@@ -26,6 +27,7 @@ class InvitationController extends Controller
         }
         match ($request->query('status')) {
             'revoked' => $q->whereNotNull('revoked_at'),
+            'unsent' => $q->active()->where('status', 'pending')->where('send_count', 0),
             'pending', 'attending', 'declined' => $q->active()->where('status', $request->query('status')),
             default => null,
         };
@@ -80,6 +82,26 @@ class InvitationController extends Controller
         $invitation->update(['revoked_at' => null]);
 
         return back()->with('status', 'Invitation restored.');
+    }
+
+    /** Opens WhatsApp with the invitation (first send) or a reminder (later sends), and records the send. */
+    public function send(Invitation $invitation, InviteMessageBuilder $message)
+    {
+        if ($invitation->isRevoked() || $invitation->status !== 'pending') {
+            return back()->withErrors(['send' => 'Links are only sent to active invitations that have not responded.']);
+        }
+
+        $url = $message->whatsappUrl($invitation); // built before counting, so send #1 is the invitation
+        $invitation->increment('send_count', 1, ['last_sent_at' => now()]);
+
+        return redirect()->away($url);
+    }
+
+    public function resetSends(Invitation $invitation)
+    {
+        $invitation->forceFill(['send_count' => 0, 'last_sent_at' => null])->save();
+
+        return back()->with('status', 'Send status reset. The next message will use the invitation wording.');
     }
 
     /** Change an RSVP on behalf of a guest (ignores the deadline). */

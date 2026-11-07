@@ -22,6 +22,7 @@ class Invitation extends Model
         'category' => GuestCategory::class,
         'responded_at' => 'datetime',
         'revoked_at' => 'datetime',
+        'last_sent_at' => 'datetime',
     ];
 
     protected static function booted(): void
